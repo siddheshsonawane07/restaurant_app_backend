@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
 import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
+import { getFirestore } from '../../services/firebase.service.js';
 
 
 export const config = {
@@ -11,7 +12,7 @@ export const config = {
   description: 'Get public menu with available dishes (no auth required)',
   emits: [],
   flows: ['customer-menu'],
-  middleware: [errorMiddleware],
+  middleware: [],
   queryParams: [
     {
       name: 'category',
@@ -40,39 +41,52 @@ export const config = {
 
 export const handler = async (req, { logger }) => {
   try {
-    const { category } = req.queryParams;
+    logger.info('CustomerGetMenu handler started');
+    
+    const queryParams = req.query || req.queryParams || {};
+    const { category } = queryParams;
 
-    logger.info('Fetching public menu', { filters: { category } });
+    logger.info('Query params', { category, allParams: queryParams });
 
-    // Import Firebase Admin
-    const admin = await import('firebase-admin');
-    const db = admin.firestore();
-    let menuQuery = db.collection('dishes');
+    // Get Firestore instance
+    const db = getFirestore();
+    logger.info('Firestore instance obtained');
 
-    // Only show available dishes to customers
-    menuQuery = menuQuery.where('available', '==', true);
+    // Build query
+    let menuQuery = db.collection('dishes').where('available', '==', true);
 
-    // Apply category filter if provided
     if (category) {
       menuQuery = menuQuery.where('category', '==', category);
     }
 
-    const snapshot = await menuQuery.orderBy('category').orderBy('name', 'asc').get();
+    logger.info('Executing Firestore query...');
+    
+    // Execute query WITHOUT orderBy first to test
+    const snapshot = await menuQuery.get();
+    
+    logger.info('Query executed', { documentCount: snapshot.size });
 
     const menu = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      // Only return customer-relevant fields (hide internal data like ingredients details)
       menu.push({
         id: doc.id,
         name: data.name,
-        description: data.description,
+        description: data.description || '',
         price: data.price,
         category: data.category,
         preparationTime: data.preparationTime,
         imageUrl: data.imageUrl,
         available: data.available,
       });
+    });
+
+    // Sort in JavaScript instead of Firestore
+    menu.sort((a, b) => {
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return a.name.localeCompare(b.name);
     });
 
     logger.info('Menu fetched successfully', { count: menu.length });
@@ -86,7 +100,23 @@ export const handler = async (req, { logger }) => {
       },
     };
   } catch (error) {
-    logger.error('Failed to fetch menu', { error: error.message });
-    throw error;
+    logger.error('Failed to fetch menu', { 
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      errorStack: error?.stack,
+      errorName: error?.name
+    });
+    
+    // Return error response directly
+    return {
+      status: 500,
+      body: {
+        success: false,
+        error: {
+          message: error?.message || 'Failed to fetch menu',
+          code: 500
+        },
+      },
+    };
   }
 };

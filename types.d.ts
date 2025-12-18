@@ -12,11 +12,11 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    'CustomerGetMenu': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; menu: Array<{ id: string; name: string; description?: string; price: number; category: string; preparationTime?: number; imageUrl?: string; available: boolean }>; total: number }>, never>
     'AdminGetIngredients': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; ingredients: Array<{ id: string; name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number; createdAt: string; updatedAt: string }>; total: number }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
     'AdminGetDishes': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; dishes: Array<{ id: string; name: string; description?: string; price: number; category: string; ingredients: Array<{ ingredientId: string; quantity: number }>; available: boolean; preparationTime?: number; imageUrl?: string; createdAt: string; updatedAt: string }>; total: number }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
     'AdminAddIngredient': ApiRouteHandler<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number }, ApiResponse<201, { success: boolean; ingredient: { id: string; name: string; unit: string; quantity: number; createdAt: string } }> | ApiResponse<400, { error: string; details?: Array<unknown> }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
     'AdminAddDish': ApiRouteHandler<{ name: string; description?: string; price: number; category: string; ingredients: Array<{ ingredientId: string; quantity: number }>; preparationTime?: number; available: boolean; imageUrl?: string }, ApiResponse<201, { success: boolean; dish: { id: string; name: string; price: number; category: string; createdAt: string } }> | ApiResponse<400, { error: string; details?: Array<unknown> }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
+    'CustomerGetMenu': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; menu: Array<{ id: string; name: string; description?: string; price: number; category: string; preparationTime?: number; imageUrl?: string; available: boolean }>; total: number }>, never>
   }
     
 }
