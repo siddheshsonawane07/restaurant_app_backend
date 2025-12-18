@@ -1,0 +1,56 @@
+[
+  {
+    "id": "hello-world-flow",
+    "config": {
+      "src/hello/log-greeting.step.js": {
+        "x": 409,
+        "y": 44
+      },
+      "src/hello/hello-api.step.ts": {
+        "x": -409,
+        "y": 0,
+        "sourceHandlePosition": "right"
+      },
+      "src/hello/process_greeting_step.py": {
+        "x": 0,
+        "y": 34,
+        "sourceHandlePosition": "right"
+      }
+    }
+  },
+  {
+    "id": "customer-menu",
+    "config": {
+      "src\\api\\customer\\customer-get-menu.step.js": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "ingredient-management",
+    "config": {
+      "src\\api\\admin\\admin-get-ingredients.step.js": {
+        "x": 4,
+        "y": 0
+      },
+      "src\\api\\admin\\admin-add-ingredient.step.js": {
+        "x": 0,
+        "y": 203
+      }
+    }
+  },
+  {
+    "id": "dish-management",
+    "config": {
+      "src\\api\\admin\\admin-get-dishes.step.js": {
+        "x": 0,
+        "y": 0
+      },
+      "src\\api\\admin\\admin-add-dish.step.js": {
+        "x": 39,
+        "y": 203
+      }
+    }
+  }
+]
