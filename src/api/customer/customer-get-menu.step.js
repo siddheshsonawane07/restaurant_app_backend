@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
 import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
-import { getFirestore } from '../../services/firebase.service.js';
+import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js';
 
 
 export const config = {
@@ -12,7 +12,7 @@ export const config = {
   description: 'Get public menu with available dishes (no auth required)',
   emits: [],
   flows: ['customer-menu'],
-  middleware: [],
+  middleware: [firebaseMiddleware, errorMiddleware],
   queryParams: [
     {
       name: 'category',
@@ -39,84 +39,32 @@ export const config = {
   },
 };
 
-export const handler = async (req, { logger }) => {
-  try {
-    logger.info('CustomerGetMenu handler started');
-    
-    const queryParams = req.query || req.queryParams || {};
-    const { category } = queryParams;
+export const handler = async (req, { logger, db }) => {
+  logger.info('CustomerGetMenu handler started')
 
-    logger.info('Query params', { category, allParams: queryParams });
+  const { category } = req.query || {}
 
-    // Get Firestore instance
-    const db = getFirestore();
-    logger.info('Firestore instance obtained');
+  let menuQuery = db
+    .collection('dishes')
+    .where('available', '==', true)
 
-    // Build query
-    let menuQuery = db.collection('dishes').where('available', '==', true);
-
-    if (category) {
-      menuQuery = menuQuery.where('category', '==', category);
-    }
-
-    logger.info('Executing Firestore query...');
-    
-    // Execute query WITHOUT orderBy first to test
-    const snapshot = await menuQuery.get();
-    
-    logger.info('Query executed', { documentCount: snapshot.size });
-
-    const menu = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      menu.push({
-        id: doc.id,
-        name: data.name,
-        description: data.description || '',
-        price: data.price,
-        category: data.category,
-        preparationTime: data.preparationTime,
-        imageUrl: data.imageUrl,
-        available: data.available,
-      });
-    });
-
-    // Sort in JavaScript instead of Firestore
-    menu.sort((a, b) => {
-      if (a.category !== b.category) {
-        return a.category.localeCompare(b.category);
-      }
-      return a.name.localeCompare(b.name);
-    });
-
-    logger.info('Menu fetched successfully', { count: menu.length });
-
-    return {
-      status: 200,
-      body: {
-        success: true,
-        menu,
-        total: menu.length,
-      },
-    };
-  } catch (error) {
-    logger.error('Failed to fetch menu', { 
-      errorMessage: error?.message,
-      errorCode: error?.code,
-      errorStack: error?.stack,
-      errorName: error?.name
-    });
-    
-    // Return error response directly
-    return {
-      status: 500,
-      body: {
-        success: false,
-        error: {
-          message: error?.message || 'Failed to fetch menu',
-          code: 500
-        },
-      },
-    };
+  if (category) {
+    menuQuery = menuQuery.where('category', '==', category)
   }
-};
+
+  const snapshot = await menuQuery.get()
+
+  const menu = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      menu,
+      total: menu.length,
+    },
+  }
+}
