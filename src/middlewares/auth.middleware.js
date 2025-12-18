@@ -1,6 +1,4 @@
 import { getAuth } from '../config/firebase.js'
-import { UnauthorizedError } from '../errors/unauthorized.error.js'
-import { ForbiddenError } from '../errors/forbidden.error.js'
 
 /**
  * Auth middleware that verifies Firebase token
@@ -13,7 +11,9 @@ export const authMiddleware = async (req, ctx, next) => {
     // Get token from Authorization header
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Missing or invalid authorization header')
+      const err = new Error('Missing or invalid authorization header')
+      err.statusCode = 401
+      throw err
     }
 
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
@@ -22,23 +22,25 @@ export const authMiddleware = async (req, ctx, next) => {
     const auth = getAuth()
     const decodedToken = await auth.verifyIdToken(token)
 
-    // Add user info to request for use in handler
+    // Add user info to request
     req.user = {
       uid: decodedToken.uid,
       email: decodedToken.email,
       customClaims: decodedToken,
     }
 
-    logger.info('User authenticated', { uid: decodedToken.uid, email: decodedToken.email })
+    logger.info('User authenticated', {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+    })
 
     return await next()
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      throw error
-    }
-
     logger.error('Authentication failed', { error: error.message })
-    throw new UnauthorizedError('Invalid or expired token')
+
+    const err = new Error('Invalid or expired token')
+    err.statusCode = 401
+    throw err
   }
 }
 
@@ -49,18 +51,24 @@ export const authMiddleware = async (req, ctx, next) => {
 export const adminAuthMiddleware = async (req, ctx, next) => {
   const { logger } = ctx
 
-  // Check if user was added by authMiddleware
   if (!req.user) {
     logger.error('Admin auth middleware called without prior auth')
-    throw new UnauthorizedError('User not authenticated')
+
+    const err = new Error('User not authenticated')
+    err.statusCode = 401
+    throw err
   }
 
-  // Check if user has admin custom claim
-  const isAdmin = req.user.customClaims?.admin === true || req.user.customClaims?.role === 'admin'
+  const isAdmin =
+    req.user.customClaims?.admin === true ||
+    req.user.customClaims?.role === 'admin'
 
   if (!isAdmin) {
     logger.warn('User attempted admin access', { uid: req.user.uid })
-    throw new ForbiddenError('Admin access required')
+
+    const err = new Error('Admin access required')
+    err.statusCode = 403
+    throw err
   }
 
   logger.info('Admin access granted', { uid: req.user.uid })
