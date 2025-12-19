@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
 import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
+import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js'
 
 const bodySchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -18,7 +19,7 @@ export const config = {
   description: 'Add a new ingredient (Admin only)',
   emits: ['ingredient.created'],
   flows: ['ingredient-management'],
-  middleware: [errorMiddleware, authMiddleware, adminAuthMiddleware],
+  middleware: [firebaseMiddleware, authMiddleware, adminAuthMiddleware, errorMiddleware],
   bodySchema,
   responseSchema: {
     201: z.object({
@@ -40,72 +41,61 @@ export const config = {
   },
 }
 
-export const handler = async (req, { emit, logger }) => {
-  try {
-    const ingredientData = bodySchema.parse(req.body)
-    const { uid } = req.user // Set by authMiddleware
+export const handler = async (req, { emit, logger, db }) => {
+  const ingredientData = bodySchema.parse(req.body)
+  const { uid } = req.user
 
-    logger.info('Adding ingredient', { name: ingredientData.name, admin: uid })
+  logger.info('Adding ingredient', { name: ingredientData.name, admin: uid })
 
-    // Import Firebase Admin
-    const admin = await import('firebase-admin')
-    const db = admin.firestore()
-    const ingredientsRef = db.collection('ingredients')
+  const ingredientsRef = db.collection('ingredients')
 
-    // Check if ingredient with same name already exists
-    const existingIngredient = await ingredientsRef
-      .where('name', '==', ingredientData.name)
-      .limit(1)
-      .get()
+  const existingIngredient = await ingredientsRef
+    .where('name', '==', ingredientData.name)
+    .limit(1)
+    .get()
 
-    if (!existingIngredient.empty) {
-      logger.warn('Ingredient already exists', { name: ingredientData.name })
-      return {
-        status: 400,
-        body: { error: 'Ingredient with this name already exists' },
-      }
-    }
-
-    // Create new ingredient
-    const newIngredient = {
-      ...ingredientData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: uid,
-    }
-
-    const docRef = await ingredientsRef.add(newIngredient)
-
-    logger.info('Ingredient created successfully', { id: docRef.id, name: ingredientData.name })
-
-    // Emit event for background processing
-    await emit({
-      topic: 'ingredient.created',
-      data: {
-        ingredientId: docRef.id,
-        name: newIngredient.name,
-        quantity: newIngredient.quantity,
-        unit: newIngredient.unit,
-        createdBy: uid,
-        timestamp: new Date().toISOString(),
-      },
-    })
-
+  if (!existingIngredient.empty) {
+    logger.warn('Ingredient already exists', { name: ingredientData.name })
     return {
-      status: 201,
-      body: {
-        success: true,
-        ingredient: {
-          id: docRef.id,
-          name: newIngredient.name,
-          unit: newIngredient.unit,
-          quantity: newIngredient.quantity,
-          createdAt: newIngredient.createdAt,
-        },
-      },
+      status: 400,
+      body: { error: 'Ingredient with this name already exists' },
     }
-  } catch (error) {
-    logger.error('Failed to add ingredient', { error: error.message })
-    throw error
+  }
+
+  const newIngredient = {
+    ...ingredientData,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: uid,
+  }
+
+  const docRef = await ingredientsRef.add(newIngredient)
+
+  logger.info('Ingredient created successfully', { id: docRef.id, name: ingredientData.name })
+
+  await emit({
+    topic: 'ingredient.created',
+    data: {
+      ingredientId: docRef.id,
+      name: newIngredient.name,
+      quantity: newIngredient.quantity,
+      unit: newIngredient.unit,
+      createdBy: uid,
+      timestamp: new Date().toISOString(),
+    },
+  })
+
+  return {
+    status: 201,
+    body: {
+      success: true,
+      ingredient: {
+        id: docRef.id,
+        name: newIngredient.name,
+        unit: newIngredient.unit,
+        quantity: newIngredient.quantity,
+        createdAt: newIngredient.createdAt,
+      },
+    },
   }
 }

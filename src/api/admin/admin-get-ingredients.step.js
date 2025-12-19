@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
 import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
+import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js'
 
 export const config = {
   name: 'AdminGetIngredients',
@@ -10,7 +11,7 @@ export const config = {
   description: 'Get all ingredients (Admin only)',
   emits: [],
   flows: ['ingredient-management'],
-  middleware: [errorMiddleware, authMiddleware, adminAuthMiddleware],
+  middleware: [firebaseMiddleware, authMiddleware, adminAuthMiddleware, errorMiddleware],
   responseSchema: {
     200: z.object({
       success: z.boolean(),
@@ -33,37 +34,27 @@ export const config = {
   },
 }
 
-export const handler = async (req, { logger }) => {
-  try {
-    logger.info('Fetching all ingredients', { admin: req.user.uid })
+export const handler = async (req, { logger, db }) => {
+  logger.info('Fetching all ingredients', { admin: req.user.uid })
 
-    // Import Firebase Admin
-    const admin = await import('firebase-admin')
-    const db = admin.firestore()
-    const ingredientsRef = db.collection('ingredients')
+  const ingredientsRef = db.collection('ingredients')
+  const snapshot = await ingredientsRef.get()
 
-    const snapshot = await ingredientsRef.orderBy('name', 'asc').get()
+  const ingredients = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 
-    const ingredients = []
-    snapshot.forEach((doc) => {
-      ingredients.push({
-        id: doc.id,
-        ...doc.data(),
-      })
-    })
+  ingredients.sort((a, b) => a.name.localeCompare(b.name))
 
-    logger.info('Ingredients fetched successfully', { count: ingredients.length })
+  logger.info('Ingredients fetched successfully', { count: ingredients.length })
 
-    return {
-      status: 200,
-      body: {
-        success: true,
-        ingredients,
-        total: ingredients.length,
-      },
-    }
-  } catch (error) {
-    logger.error('Failed to fetch ingredients', { error: error.message })
-    throw error
+  return {
+    status: 200,
+    body: {
+      success: true,
+      ingredients,
+      total: ingredients.length,
+    },
   }
 }

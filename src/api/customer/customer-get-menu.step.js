@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
-import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
 import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js';
 
 
