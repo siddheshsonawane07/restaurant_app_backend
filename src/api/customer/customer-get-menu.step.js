@@ -1,7 +1,6 @@
-import { z } from 'zod';
+import { z } from 'zod'
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
-import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js';
-
+import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js'
 
 export const config = {
   name: 'CustomerGetMenu',
@@ -23,7 +22,6 @@ export const config = {
       success: z.boolean(),
       menu: z.array(
         z.object({
-          id: z.string(),
           name: z.string(),
           description: z.string().optional(),
           price: z.number(),
@@ -36,7 +34,7 @@ export const config = {
       total: z.number(),
     }),
   },
-};
+}
 
 export const handler = async (req, { logger, db }) => {
   logger.info('CustomerGetMenu handler started')
@@ -54,7 +52,6 @@ export const handler = async (req, { logger, db }) => {
   const snapshot = await menuQuery.get()
 
   const menu = snapshot.docs.map(doc => ({
-    id: doc.id,
     ...doc.data(),
   }))
 

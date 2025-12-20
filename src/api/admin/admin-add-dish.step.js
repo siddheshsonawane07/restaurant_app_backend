@@ -8,12 +8,14 @@ const bodySchema = z.object({
   description: z.string().optional(),
   price: z.number().min(0, 'Price must be non-negative'),
   category: z.string().min(1, 'Category is required'),
+
   ingredients: z.array(
     z.object({
-      ingredientId: z.string(),
+      ingredientId: z.string(), // ingredient NAME
       quantity: z.number().min(0),
     })
   ),
+
   preparationTime: z.number().min(0).optional(),
   available: z.boolean().default(true),
   imageUrl: z.string().url().optional(),
@@ -27,54 +29,55 @@ export const config = {
   description: 'Add a new dish (Admin only)',
   emits: ['dish.created'],
   flows: ['dish-management'],
-  middleware: [authMiddleware, adminAuthMiddleware, errorMiddleware],
+  middleware: [
+    firebaseMiddleware,
+    authMiddleware,
+    adminAuthMiddleware,
+    errorMiddleware,
+  ],
   bodySchema,
-  responseSchema: {
-    201: z.object({
-      success: z.boolean(),
-      dish: z.object({
-        id: z.string(),
-        name: z.string(),
-        price: z.number(),
-        category: z.string(),
-        createdAt: z.string(),
-      }),
-    }),
-    400: z.object({
-      error: z.string(),
-      details: z.array(z.any()).optional(),
-    }),
-    401: z.object({ error: z.string() }),
-    403: z.object({ error: z.string() }),
-  },
 }
 
 export const handler = async (req, { emit, logger, db }) => {
   const dishData = bodySchema.parse(req.body)
   const { uid } = req.user
 
-  logger.info('Adding dish', { name: dishData.name, admin: uid })
+  logger.info('Adding dish', {
+    dishName: dishData.name,
+    admin: uid,
+  })
 
   const dishesRef = db.collection('dishes')
   const ingredientsRef = db.collection('ingredients')
 
+  //  Validate ingredients by NAME
   const ingredientChecks = await Promise.all(
     dishData.ingredients.map(async (ing) => {
-      const doc = await ingredientsRef.doc(ing.ingredientId).get()
-      return { id: ing.ingredientId, exists: doc.exists }
+      const snapshot = await ingredientsRef
+        .where('name', '==', ing.ingredientId)
+        .limit(1)
+        .get()
+
+      return {
+        name: ing.ingredientId,
+        exists: !snapshot.empty,
+      }
     })
   )
 
-  const missingIngredients = ingredientChecks.filter((check) => !check.exists)
+  const missingIngredients = ingredientChecks.filter(i => !i.exists)
+
   if (missingIngredients.length > 0) {
-    const missingIds = missingIngredients.map((ing) => ing.id).join(', ')
-    logger.warn('Some ingredients do not exist', { missingIds })
+    const missingNames = missingIngredients.map(i => i.name).join(', ')
+    logger.warn('Some ingredients do not exist', { missingNames })
+
     return {
       status: 400,
-      body: { error: `Ingredients not found: ${missingIds}` },
+      body: { error: `Ingredients not found: ${missingNames}` },
     }
   }
 
+  //  Enforce unique dish name
   const existingDish = await dishesRef
     .where('name', '==', dishData.name)
     .limit(1)
@@ -90,6 +93,13 @@ export const handler = async (req, { emit, logger, db }) => {
 
   const newDish = {
     ...dishData,
+
+    // normalize ingredient storage
+    ingredients: dishData.ingredients.map(ing => ({
+      name: ing.ingredientId,
+      quantity: ing.quantity,
+    })),
+
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: uid,
@@ -97,7 +107,10 @@ export const handler = async (req, { emit, logger, db }) => {
 
   const docRef = await dishesRef.add(newDish)
 
-  logger.info('Dish created successfully', { id: docRef.id, name: dishData.name })
+  logger.info('Dish created successfully', {
+    docId: docRef.id,
+    name: newDish.name,
+  })
 
   await emit({
     topic: 'dish.created',
@@ -106,7 +119,7 @@ export const handler = async (req, { emit, logger, db }) => {
       name: newDish.name,
       price: newDish.price,
       category: newDish.category,
-      ingredients: dishData.ingredients,
+      ingredients: newDish.ingredients,
       createdBy: uid,
       timestamp: new Date().toISOString(),
     },
