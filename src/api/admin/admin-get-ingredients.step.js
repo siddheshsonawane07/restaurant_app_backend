@@ -40,6 +40,20 @@ export const handler = async (req, { logger, db }) => {
   const ingredientsRef = db.collection('ingredients')
   const snapshot = await ingredientsRef.get()
 
+  if (snapshot.empty) {
+    logger.warn('No ingredients collection found or collection is empty')
+
+    return {
+      status: 200,
+      body: {
+        success: true,
+        ingredients: [],
+        total: 0,
+        message: 'No ingredients found',
+      },
+    }
+  }
+
   const ingredients = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),

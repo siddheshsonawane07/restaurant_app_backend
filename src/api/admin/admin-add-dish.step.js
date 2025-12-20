@@ -27,7 +27,7 @@ export const config = {
   description: 'Add a new dish (Admin only)',
   emits: ['dish.created'],
   flows: ['dish-management'],
-  middleware: [firebaseMiddleware, authMiddleware, adminAuthMiddleware, errorMiddleware],
+  middleware: [authMiddleware, adminAuthMiddleware, errorMiddleware],
   bodySchema,
   responseSchema: {
     201: z.object({

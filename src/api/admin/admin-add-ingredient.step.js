@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { errorMiddleware } from '../../middlewares/error.middleware.js'
 import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.middleware.js'
-import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js'
 
 const bodySchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -19,7 +18,7 @@ export const config = {
   description: 'Add a new ingredient (Admin only)',
   emits: ['ingredient.created'],
   flows: ['ingredient-management'],
-  middleware: [firebaseMiddleware, authMiddleware, adminAuthMiddleware, errorMiddleware],
+  middleware: [authMiddleware, adminAuthMiddleware, errorMiddleware],
   bodySchema,
   responseSchema: {
     201: z.object({

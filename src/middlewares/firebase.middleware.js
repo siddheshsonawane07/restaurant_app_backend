@@ -1,4 +1,4 @@
-import { getFirestore } from '../services/firebase.service.js'
+import { getFirestore } from '../config/firebase.js'
 
 export const firebaseMiddleware = async (req, ctx, next) => {
   const { logger } = ctx
