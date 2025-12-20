@@ -13,13 +13,13 @@ declare module 'motia' {
 
   interface Handlers {
     'CustomerGetMenu': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; menu: Array<{ name: string; description?: string; price: number; category: string; preparationTime?: number; imageUrl?: string; available: boolean }>; total: number }>, never>
+    'AdminUpdateIngredient': ApiRouteHandler<{ name?: string; unit?: string; quantity?: number; reorderLevel?: number; cost?: number }, unknown, never>
+    'AdminUpdateDish': ApiRouteHandler<{ name?: string; description?: string; price?: number; category?: string; preparationTime?: number; imageUrl?: string; available?: boolean }, unknown, never>
     'AdminGetIngredients': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; ingredients: Array<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number; createdAt: string; updatedAt: string }>; total: number }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
+    'AdminDeleteIngredient': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminDeleteDish': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminAddIngredient': ApiRouteHandler<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number }, unknown, never>
     'AdminAddDish': ApiRouteHandler<{ name: string; description?: string; price: number; category: string; ingredients: Array<{ ingredientId: string; quantity: number }>; preparationTime?: number; available: boolean; imageUrl?: string }, unknown, never>
-    'AdminDeleteIngredient': ApiRouteHandler<Record<string, unknown>, unknown, never>
-    'AdminUpdateDish': ApiRouteHandler<{ name?: string; description?: string; price?: number; category?: string; preparationTime?: number; imageUrl?: string; available?: boolean }, unknown, never>
-    'AdminUpdateIngredient': ApiRouteHandler<{ name?: string; unit?: string; quantity?: number; reorderLevel?: number; cost?: number }, unknown, never>
   }
     
 }
