@@ -21,11 +21,11 @@ declare module 'motia' {
     'AdminUpdateDish': ApiRouteHandler<{ name?: string; description?: string; price?: number; category?: string; preparationTime?: number; imageUrl?: string; available?: boolean }, unknown, never>
     'AdminGetIngredients': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; ingredients: Array<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number; createdAt: string; updatedAt: string }>; total: number }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>
     'GetAdminDashboard': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'GetAllOrders': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminDeleteIngredient': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminDeleteDish': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminAddIngredient': ApiRouteHandler<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number }, unknown, never>
     'AdminAddDish': ApiRouteHandler<{ name: string; description?: string; price: number; category: string; ingredients: Array<{ ingredientId: string; quantity: number }>; preparationTime?: number; available: boolean; imageUrl?: string }, unknown, never>
-    'GetAllOrders': ApiRouteHandler<Record<string, unknown>, unknown, never>
   }
     interface StreamAuthContext { userId: string; isAdmin: boolean }
 }

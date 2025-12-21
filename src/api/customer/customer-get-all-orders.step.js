@@ -26,7 +26,6 @@ export const handler = async (req, { logger, db }) => {
   const ordersSnapshot = await db
     .collection('orders')
     .where('customerId', '==', userId)
-    .orderBy('createdAt', 'desc')
     .get()
 
   const orders = []
@@ -47,6 +46,8 @@ export const handler = async (req, { logger, db }) => {
       createdAt: order.createdAt
     })
   })
+
+  orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   logger.info('Customer orders loaded', {
     customerId: userId,
