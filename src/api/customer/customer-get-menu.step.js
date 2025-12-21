@@ -8,7 +8,7 @@ export const config = {
   path: '/api/customer/menu',
   method: 'GET',
   description: 'Get public menu with available dishes (no auth required)',
-  emits: [],
+  emits: ['menu.fetched'],
   flows: ['customer-menu'],
   middleware: [firebaseMiddleware, errorMiddleware],
   queryParams: [

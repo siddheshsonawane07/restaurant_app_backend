@@ -9,7 +9,7 @@ export const config = {
   path: '/api/admin/ingredients',
   method: 'GET',
   description: 'Get all ingredients (Admin only)',
-  emits: [],
+  emits: ['ingredient.fetched'],
   flows: ['ingredient-management'],
   middleware: [
     firebaseMiddleware,

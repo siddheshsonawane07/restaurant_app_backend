@@ -12,8 +12,8 @@ export const config = {
   path: "/api/admin/ingredients/:ingredientId",
   method: "DELETE",
   description: "Delete an ingredient (Admin only)",
-  flows: ["ingredient-management"],
-  emits: ["ingredient.deleted"],
+  flows: ['ingredient-management'],
+  emits: ['ingredient.deleted'],
   middleware: [
     firebaseMiddleware,
     authMiddleware,
@@ -21,18 +21,6 @@ export const config = {
     errorMiddleware,
   ],
 };
-
-function ingredientIdFromName(name) {
-  if (!name || typeof name !== "string") {
-    throw new Error("Ingredient name is missing or invalid");
-  }
-
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
 
 export const handler = async (req, { logger, db }) => {
   const ingredientName = req.pathParams.ingredientId;

@@ -18,7 +18,7 @@
   },
   "include": [
     "**/*.ts",
-    "motia.config.ts",
+    "motia.config.js",
     "**/*.tsx",
     "types.d.ts",
     "**/*.jsx"
