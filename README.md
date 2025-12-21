@@ -1,106 +1,122 @@
-# restaurant_app_backend
+# Restaurant Management System (Motia Backend)
 
-A Motia project created with the **multi-language** starter template (TypeScript + Python).
+A backend-focused Restaurant Management System built using Motia as part of a hackathon.  
+This project focuses on learning and applying event-driven backend concepts rather than building a full frontend application.
 
-## What is Motia?
+The system is designed to keep APIs simple while moving heavy or long-running logic to background workflows.
 
-Motia is an open-source, unified backend framework that eliminates runtime fragmentation by bringing **APIs, background jobs, queueing, streaming, state, workflows, AI agents, observability, scaling, and deployment** into one unified system using a single core primitive, the **Step**.
+---
 
-## Polyglot Architecture
+## Problem Statement
 
-This template demonstrates Motia's polyglot capabilities by combining:
+Small and medium-sized restaurants often manage orders, menus, and inventory in a tightly coupled way where all logic runs inside API requests.  
+This makes systems harder to scale, maintain, and extend as requirements grow.
 
-- **TypeScript**: API endpoint (`hello-api.step.ts`) - handles HTTP requests
-- **Python**: Event processor (`process_greeting_step.py`) - handles background processing
-- **JavaScript**: Logger (`log-greeting.step.js`) - handles workflow completion
+---
 
-This shows how you can use the best language for each task while keeping everything in a single unified system.
+## Solution Overview
 
-## Quick Start
+This project uses Motia to build a clean backend architecture where:
 
-```bash
-# Start the development server
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+- APIs handle validation and core state updates
+- Background logic runs using events
+- Future real-time updates can be handled using streams
 
-This starts the Motia runtime and the **Workbench** - a powerful UI for developing and debugging your workflows. By default, it's available at [`http://localhost:3000`](http://localhost:3000).
+The goal is to separate business logic from side effects and build something closer to a real-world backend system.
 
-```bash
-# Test your first endpoint
-curl http://localhost:3000/hello
-```
+---
 
-## How It Works
+## Tech Stack
 
-1. **TypeScript API Step** receives the HTTP request at `/hello`
-2. It emits a `process-greeting` event with the request data
-3. **Python Event Step** picks up the event, processes it, and stores the result in state
-4. Python emits a `greeting-processed` event
-5. **JavaScript Event Step** logs the completed workflow
+- Motia
+- Node.js
+- Firestore
+- Firebase Authentication
+- Gemini AI (work in progress)
 
-## Step Types
-
-Every Step has a `type` that defines how it triggers:
-
-| Type | When it runs | Use case |
-|------|--------------|----------|
-| **`api`** | HTTP request | REST APIs, webhooks |
-| **`event`** | Event emitted | Background jobs, workflows |
-| **`cron`** | Schedule | Cleanup, reports, reminders |
-
-## Development Commands
-
-```bash
-# Start Workbench and development server
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-
-# Start production server (without hot reload)
-npm run start
-# or
-yarn start
-# or
-pnpm start
-
-# Generate TypeScript types from Step configs
-npm run generate-types
-# or
-yarn generate-types
-# or
-pnpm generate-types
-
-# Build project for deployment
-npm run build
-# or
-yarn build
-# or
-pnpm build
-```
+---
 
 ## Project Structure
 
-```
-steps/                           # Your Step definitions
-├── hello/
-│   ├── hello-api.step.ts       # TypeScript API endpoint
-│   ├── process_greeting_step.py # Python event processor
-│   └── log-greeting.step.js    # JavaScript logger
-motia.config.ts                  # Motia configuration
-requirements.txt                 # Python dependencies
-```
 
-Steps are auto-discovered from your `steps/` or `src/` directories - no manual registration required.
+---
 
-## Learn More
+## Core Features Implemented
 
-- [Documentation](https://motia.dev/docs) - Complete guides and API reference
-- [Quick Start Guide](https://motia.dev/docs/getting-started/quick-start) - Detailed getting started tutorial
-- [Core Concepts](https://motia.dev/docs/concepts/overview) - Learn about Steps and Motia architecture
-- [Discord Community](https://discord.gg/motia) - Get help and connect with other developers
+### Role-Based Access
+
+- Firebase Authentication for users
+- Admin and customer separation
+- Authorization enforced using middleware
+
+---
+
+### Admin Features
+
+- Add, update, and delete ingredients
+- Add, update, and delete dishes
+- View all orders
+- Update order status
+- Basic dashboard data
+- AI-based analytics endpoint (prototype)
+
+---
+
+### Customer Features
+
+- View menu
+- Place orders
+- View order history
+- View individual order details
+
+---
+
+### Order Lifecycle
+
+Orders follow a defined lifecycle:
+
+pending → accepted → preparing → ready → completed
+↓
+rejected
+
+
+Invalid state transitions are prevented by the backend.
+
+---
+
+### Event-Driven Inventory Deduction
+
+- When an order is accepted, the API emits an event
+- A background event handler deducts ingredient quantities
+- This avoids heavy processing inside the API
+- Keeps the system non-blocking and easier to extend
+
+---
+
+## AI Analytics Agent (Work in Progress)
+
+An AI analytics endpoint was added for admins to ask natural language questions about restaurant data.
+
+- Collects orders, dishes, and ingredients from Firestore
+- Sends context to a Gemini AI model
+- Streams responses back using Motia Streams
+- Designed to provide insights like popular dishes, ingredient usage, and trends
+
+This feature is a prototype and not fully production-ready.
+
+---
+
+## Future Improvements
+
+- Real-time order updates using Motia Streams
+- Inventory low-stock alerts and automation
+- Notifications for order status changes
+- Analytics dashboards
+- Order expiry and scheduled background jobs
+- Smarter AI agent with recommendations and automation
+
+---
+
+## Summary
+
+This project was built to explore how Motia can be used to manage APIs, background workflows, events, and streams in a single backend system.
