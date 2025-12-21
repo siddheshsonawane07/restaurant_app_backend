@@ -4,35 +4,23 @@ import { authMiddleware, adminAuthMiddleware } from '../../middlewares/auth.midd
 import { firebaseMiddleware } from '../../middlewares/firebase.middleware.js'
 
 export const config = {
-  name: 'AdminGetDashboard',
+  name: 'GetAdminDashboard',
   type: 'api',
-  path: '/api/admin/orders/dashboard',
+  path: '/api/admin/dashboard',
   method: 'GET',
-  description: 'Get admin dashboard data',
-  flows: ['order-management'],
-  emits: ['admin.dashboard'],
+  description: 'Get order counts by status for admin dashboard',
   middleware: [
     firebaseMiddleware,
     authMiddleware,
     adminAuthMiddleware,
-    errorMiddleware
-  ]
+    errorMiddleware,
+  ],
+  flows: ['dashboard'],
+  emits: ['admin.dashboard_fetched'],
 }
 
 export const handler = async (req, { logger, db }) => {
-  logger.info('Loading admin dashboard')
-
-  const ordersSnapshot = await db
-    .collection('orders')
-    .where('status', 'in', ['pending', 'accepted', 'preparing', 'ready'])
-    .get()
-
-  const ordersByStatus = {
-    pending: [],
-    accepted: [],
-    preparing: [],
-    ready: []
-  }
+  logger.info('Fetching admin dashboard data')
 
   const counts = {
     pending: 0,
@@ -40,51 +28,31 @@ export const handler = async (req, { logger, db }) => {
     preparing: 0,
     ready: 0,
     completed: 0,
-    rejected: 0
+    rejected: 0,
   }
 
-  ordersSnapshot.forEach(doc => {
-    const order = doc.data()
+  const pendingSnapshot = await db.collection('orders').where('status', '==', 'pending').get()
+  counts.pending = pendingSnapshot.size
 
-    const summary = {
-      orderId: doc.id,
-      customerId: order.customerId,
-      customerName: order.customerName,
-      totalAmount: order.totalAmount,
-      itemCount: order.items.length,
-      status: order.status,
-      currentMessage: order.currentMessage || '',
-      lastUpdatedAt: order.lastUpdatedAt,
-      createdAt: order.createdAt
-    }
+  const acceptedSnapshot = await db.collection('orders').where('status', '==', 'accepted').get()
+  counts.accepted = acceptedSnapshot.size
 
-    if (ordersByStatus[order.status]) {
-      ordersByStatus[order.status].push(summary)
-      counts[order.status]++
-    }
-  })
+  const preparingSnapshot = await db.collection('orders').where('status', '==', 'preparing').get()
+  counts.preparing = preparingSnapshot.size
 
-  const completedSnapshot = await db
-    .collection('orders')
-    .where('status', '==', 'completed')
-    .get()
+  const readySnapshot = await db.collection('orders').where('status', '==', 'ready').get()
+  counts.ready = readySnapshot.size
+
+  const completedSnapshot = await db.collection('orders').where('status', '==', 'completed').get()
   counts.completed = completedSnapshot.size
 
-  const rejectedSnapshot = await db
-    .collection('orders')
-    .where('status', '==', 'rejected')
-    .get()
+  const rejectedSnapshot = await db.collection('orders').where('status', '==', 'rejected').get()
   counts.rejected = rejectedSnapshot.size
 
-  const dashboardData = {
-    ...ordersByStatus,
-    counts
-  }
-
-  logger.info('Dashboard loaded successfully', { counts })
+  logger.info('Dashboard data fetched successfully', counts)
 
   return {
     status: 200,
-    body: dashboardData
+    body: { counts },
   }
 }

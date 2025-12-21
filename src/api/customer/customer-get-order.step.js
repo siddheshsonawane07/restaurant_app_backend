@@ -40,7 +40,7 @@ export const handler = async (req, { logger, db }) => {
 
   const order = orderDoc.data()
 
-  // 🔐 Authorization: owner or admin
+  //  Authorization: owner or admin
   if (order.customerId !== userId && !isAdmin) {
     logger.warn('Unauthorized order access', {
       orderId,
