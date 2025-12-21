@@ -25,6 +25,7 @@ declare module 'motia' {
     'GetAllOrders': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminDeleteIngredient': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'AdminDeleteDish': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'AdminAIAnalytics': ApiRouteHandler<{ query: string }, unknown, never>
     'AdminAddIngredient': ApiRouteHandler<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number }, unknown, never>
     'AdminAddDish': ApiRouteHandler<{ name: string; description?: string; price: number; category: string; ingredients: Array<{ ingredientId: string; quantity: number }>; preparationTime?: number; available: boolean; imageUrl?: string }, unknown, never>
   }
