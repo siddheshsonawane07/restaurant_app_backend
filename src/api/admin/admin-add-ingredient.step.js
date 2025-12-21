@@ -39,7 +39,6 @@ export const handler = async (req, { emit, logger, db }) => {
 
   const ingredientsRef = db.collection('ingredients')
 
-  //  Enforce unique ingredient name
   const existingIngredient = await ingredientsRef
     .where('name', '==', ingredientData.name)
     .limit(1)
@@ -66,11 +65,10 @@ export const handler = async (req, { emit, logger, db }) => {
   const docRef = await ingredientsRef.add(newIngredient)
 
   logger.info('Ingredient created successfully', {
-    docId: docRef.id, // internal only
+    docId: docRef.id,
     ingredientName: newIngredient.name,
   })
 
-  //  Emit NAME, not Firestore ID
   await emit({
     topic: 'ingredient.created',
     data: {
@@ -82,7 +80,6 @@ export const handler = async (req, { emit, logger, db }) => {
     },
   })
 
-  // Response uses name as identifier
   return {
     status: 201,
     body: {

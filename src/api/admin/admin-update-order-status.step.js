@@ -79,7 +79,6 @@ export const handler = async (req, { emit, logger, db }) => {
 
   const timestamp = Date.now()
 
-  // Update Firestore
   await orderRef.update({
     status: newStatus,
     currentMessage: adminMessage,
@@ -101,6 +100,8 @@ export const handler = async (req, { emit, logger, db }) => {
   }
 
   // Emit events
+  logger.info('Emitting order.status_changed event', { orderId, newStatus })
+  
   await emit({
     topic: 'order.status_changed',
     data: {
@@ -114,6 +115,12 @@ export const handler = async (req, { emit, logger, db }) => {
   })
 
   if (newStatus === 'accepted') {
+    logger.info('EMITTING order.accepted EVENT', {
+      orderId,
+      itemCount: currentOrder.items.length,
+      items: currentOrder.items
+    })
+    
     await emit({
       topic: 'order.accepted',
       data: {
@@ -123,6 +130,8 @@ export const handler = async (req, { emit, logger, db }) => {
         timestamp
       }
     })
+    
+    logger.info('order.accepted EVENT EMITTED SUCCESSFULLY')
   }
 
   logger.info('Order status updated successfully', {

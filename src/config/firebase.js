@@ -3,9 +3,7 @@ import 'dotenv/config';
 
 let firebaseApp = null;
 
-/**
- * Initialize Firebase Admin SDK (singleton)
- */
+// Initialize Firebase Admin SDK
 const initializeFirebase = () => {
   if (firebaseApp) {
     return firebaseApp;
@@ -36,25 +34,19 @@ const initializeFirebase = () => {
   return firebaseApp;
 };
 
-/**
- * Firestore
- */
+// Firestore
 export const getFirestore = () => {
   initializeFirebase();
   return admin.firestore();
 };
 
-/**
- * Auth
- */
+// Auth
 export const getAuth = () => {
   initializeFirebase();
   return admin.auth();
 };
 
-/**
- * Storage (optional)
- */
+// Storage
 export const getStorage = () => {
   initializeFirebase();
   return admin.storage();

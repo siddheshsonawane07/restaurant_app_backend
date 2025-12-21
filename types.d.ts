@@ -12,11 +12,12 @@ declare module 'motia' {
   }
 
   interface Handlers {
+    'DeductInventoryOnAccept': EventHandler<never, never>
     'CustomerGetOrder': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'CustomerGetMenu': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; menu: Array<{ name: string; description?: string; price: number; category: string; preparationTime?: number; imageUrl?: string; available: boolean }>; total: number }>, never>
     'CustomerGetOrders': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'CustomerPlaceOrder': ApiRouteHandler<{ items: Array<{ dishName: string; quantity: number }> }, unknown, never>
-    'AdminUpdateOrderStatus': ApiRouteHandler<{ newStatus: 'accepted' | 'rejected' | 'preparing' | 'ready' | 'completed'; adminMessage: string }, unknown, never>
+    'AdminUpdateOrderStatus': ApiRouteHandler<{ newStatus: 'accepted' | 'rejected' | 'preparing' | 'ready' | 'completed'; adminMessage: string }, unknown, { topic: 'order.accepted'; data: never }>
     'AdminUpdateIngredient': ApiRouteHandler<{ name?: string; unit?: string; quantity?: number; reorderLevel?: number; cost?: number }, unknown, never>
     'AdminUpdateDish': ApiRouteHandler<{ name?: string; description?: string; price?: number; category?: string; preparationTime?: number; imageUrl?: string; available?: boolean }, unknown, never>
     'AdminGetIngredients': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; ingredients: Array<{ name: string; unit: string; quantity: number; reorderLevel?: number; cost?: number; createdAt: string; updatedAt: string }>; total: number }> | ApiResponse<401, { error: string }> | ApiResponse<403, { error: string }>, never>

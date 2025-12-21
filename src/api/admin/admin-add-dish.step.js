@@ -11,7 +11,7 @@ const bodySchema = z.object({
 
   ingredients: z.array(
     z.object({
-      ingredientId: z.string(), // ingredient NAME
+      ingredientId: z.string(),
       quantity: z.number().min(0),
     })
   ),
