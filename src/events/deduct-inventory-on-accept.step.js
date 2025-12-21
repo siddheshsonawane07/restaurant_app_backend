@@ -6,6 +6,12 @@ export const config = {
   subscribes: ['order.accepted'],
   emits: ['inventory.deducted'],
   flows: ['order-management'],
+  infrastructure: {
+    queue: {
+      type: 'fifo',
+      maxRetries: 5,
+    }
+  },
   description: 'Deduct ingredient stock when order is accepted'
 }
 
