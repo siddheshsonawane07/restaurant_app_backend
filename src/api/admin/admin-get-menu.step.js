@@ -11,7 +11,7 @@ export const config = {
   method: "GET",
   description: "Get public menu with available dishes (no auth required)",
   emits: ["menu.fetched"],
-  flows: ["customer-menu"],
+  flows: ["menu"],
   middleware: [
     firebaseMiddleware,
     authMiddleware,

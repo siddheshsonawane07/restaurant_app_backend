@@ -6,14 +6,14 @@ export const config = {
   subscribes: ['order.accepted'],
   emits: ['inventory.deducted'],
   flows: ['order-management'],
-  infrastructure: {
+    infrastructure: {
     queue: {
       type: 'fifo',
       maxRetries: 5,
     }
   },
   description: 'Deduct ingredient stock when order is accepted'
-}
+} 
 
 export const handler = async (event, { logger, emit }) => {
   logger.info('EVENT RECEIVED', { event })
