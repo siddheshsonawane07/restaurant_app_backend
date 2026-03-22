@@ -9,7 +9,8 @@ const bodySchema = z.object({
     'rejected',
     'preparing',
     'ready',
-    'completed'
+    'completed',
+    'cancelled'
   ]),
   adminMessage: z.string().optional().default('')
 })
@@ -35,7 +36,8 @@ const VALID_TRANSITIONS = {
   pending: ['accepted', 'rejected'],
   accepted: ['preparing'],
   preparing: ['ready'],
-  ready: ['completed']
+  ready: ['completed'],
+  cancelled: ['cancelled'],
 }
 
 export const handler = async (req, { emit, logger, db }) => {
